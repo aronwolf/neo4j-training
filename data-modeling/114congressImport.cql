@@ -2,6 +2,10 @@
 // Legis-graph LOAD CSV cypher script
 // https://github.com/legis-graph/legis-graph
 
+//empty your database
+MATCH (n)
+DETACH DELETE n;
+
 // Load Legislators
 
 CREATE INDEX ON :Legislator(bioguideID);
