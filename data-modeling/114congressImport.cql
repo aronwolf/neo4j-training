@@ -2,10 +2,6 @@
 // Legis-graph LOAD CSV cypher script
 // https://github.com/legis-graph/legis-graph
 
-//empty your database
-MATCH (n)
-DETACH DELETE n;
-
 // Load Legislators
 
 CREATE INDEX ON :Legislator(bioguideID);
@@ -22,8 +18,11 @@ CREATE INDEX ON :Legislator(icpsrID);
 LOAD CSV WITH HEADERS
 FROM 'https://dl.dropboxusercontent.com/u/67572426/legislators-current.csv' AS line
 MERGE (legislator:Legislator { thomasID: line.thomasID })
-    ON CREATE SET legislator = line
-    ON MATCH SET legislator = line
+    ON CREATE SET legislator = line;
+    
+LOAD CSV WITH HEADERS
+FROM 'https://dl.dropboxusercontent.com/u/67572426/legislators-current.csv' AS line
+MATCH (legislator:Legislator { thomasID: line.thomasID })
 MERGE (s:State {code: line.state})
 CREATE UNIQUE (legislator)-[:REPRESENTS]->(s)
 MERGE (p:Party {name: line.currentParty})
@@ -122,3 +121,9 @@ MATCH (c:Committee {thomasID: line.committeeID})
 MATCH (l:Legislator {thomasID: line.legislatorID})
 CREATE UNIQUE (l)-[r:SERVES_ON]->(c)
 SET r.rank = line.rank;
+
+MATCH (b:Bill)-[r:SPONSORED_BY]->(sponsor:Legislator)
+WHERE r.cosponsor = "0"
+MATCH (b)-[s:SPONSORED_BY]->(cosponsor:Legislator)
+WHERE s.cosponsor = "1"
+CREATE (cosponsor)-[:INFLUENCED_BY]->(sponsor);
